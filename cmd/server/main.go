@@ -32,7 +32,7 @@ func (ms *MemStorage) UpCounter(name string, value int64) {
 	ms.counter[name] += value
 }
 
-func (storage *MemStorage) mainUpdate(w http.ResponseWriter, r *http.Request) {
+func (ms *MemStorage) mainUpdate(w http.ResponseWriter, r *http.Request) {
 	//Проверяем post
 	if r.Method != http.MethodPost {
 		http.Error(w, "Post", http.StatusMethodNotAllowed)
@@ -60,7 +60,7 @@ func (storage *MemStorage) mainUpdate(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid gauge value", http.StatusBadRequest)
 			return
 		}
-		storage.UpGauge(metricName, value)
+		ms.UpGauge(metricName, value)
 
 	case "counter":
 		value, err := strconv.ParseInt(metricValueStr, 10, 64)
@@ -68,7 +68,7 @@ func (storage *MemStorage) mainUpdate(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid counter value", http.StatusBadRequest)
 			return
 		}
-		storage.UpCounter(metricName, value)
+		ms.UpCounter(metricName, value)
 
 	default:
 		http.Error(w, "Invalid metric type", http.StatusBadRequest)
