@@ -35,6 +35,8 @@ func TestUpdateHandler_Gauge_TableDriven(t *testing.T) {
 		handler(w, req)
 
 		resp := w.Result()
+		defer resp.Body.Close()
+
 		if tt.shouldFail {
 			if resp.StatusCode == http.StatusOK {
 				t.Errorf("For URL %s: expected failure, but got status OK", tt.url)
@@ -91,6 +93,8 @@ func TestUpdateHandler_Counter(t *testing.T) {
 		handler(w, req)
 
 		resp := w.Result()
+		defer resp.Body.Close()
+
 		if tt.shouldFail {
 			if resp.StatusCode == http.StatusOK {
 				t.Errorf("For URL %s: expected failure, but got status OK", tt.url)
@@ -126,6 +130,7 @@ func TestUpdateHandler_InvalidMethod(t *testing.T) {
 
 	handler(w, req)
 	resp := w.Result()
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusMethodNotAllowed {
 		t.Errorf("expected status MethodNotAllowed, got %d", resp.StatusCode)
 	}
