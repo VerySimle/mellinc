@@ -42,7 +42,7 @@ func (ms *MemStorage) GetAllMetrics() map[string]string {
 	out := make(map[string]string)
 	// Copy gauge
 	for k, v := range ms.Gauge {
-		out[k] = fmt.Sprintf("%f", v)
+		out[k] = fmt.Sprintf("%g", v)
 	}
 	// Copy counter
 	for k, v := range ms.Counter {
