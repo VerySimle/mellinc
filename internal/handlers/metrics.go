@@ -1,80 +1,88 @@
-// internal/handlers/update.go
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/VerySimle/mellinc/internal/storage"
+	"github.com/go-chi/chi/v5"
 )
 
-func UpdateHandler(ms *storage.MemStorage) http.HandlerFunc {
+// RootHandler выводит все метрики в виде HTML-страницы
+func AllHandler(repo storage.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Проверяем, что используется метод POST
-		if r.Method != http.MethodPost {
-			http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
+		metrics := repo.GetAllMetrics()
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, "<html><head><title>Metrics</title></head><body><h1>Все метрики</h1><ul>")
+		for name, value := range metrics {
+			fmt.Fprintf(w, "<li>%s: %s</li>", name, value)
+		}
+		fmt.Fprint(w, "</ul></body></html>")
+	}
+}
+
+// ValueHandler возвращает значение метрики по типу и имени
+func ValueHandler(repo storage.Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		metricType, metricName := chi.URLParam(r, "type"), chi.URLParam(r, "name")
+		if metricName == "" {
+			http.Error(w, "Metric name cannot be empty", http.StatusNotFound)
 			return
 		}
+		metrics := repo.GetAllMetrics()
+		if value, ok := metrics[metricName]; ok && (metricType == "gauge" || metricType == "counter") {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			fmt.Fprint(w, value)
+		} else {
+			http.Error(w, fmt.Sprintf("%s metric not found", metricType), http.StatusNotFound)
+		}
+	}
+}
 
-		// Проверяем заголовок Content-Type
-		if contentType := r.Header.Get("Content-Type"); contentType != "text/plain" {
-			http.Error(w, "Invalid Content-Type, expected text/plain", http.StatusBadRequest)
+// UpdateHandler обновляет метрику
+func UpdateHandler(repo storage.Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		metricType := chi.URLParam(r, "type")
+		metricName := chi.URLParam(r, "name")
+		metricValueStr := chi.URLParam(r, "value")
+
+		if ct := r.Header.Get("Content-Type"); ct != "" && ct != "text/plain" {
+			http.Error(w, "Expected Content-Type text/plain", http.StatusBadRequest)
 			return
 		}
-
-		// Парсим URL: /update/<тип>/<имя>/<значение>
-		pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-		// Корректный url
-		if len(pathParts) != 4 || pathParts[0] != "update" {
-			http.Error(w, "Invalid URL format", http.StatusNotFound)
-			return
-		}
-		metricType := pathParts[1]
-		metricName := pathParts[2]
-		metricValueStr := pathParts[3]
-
-		// имя==пустое, возвращаем ошибку
 		if metricName == "" {
 			http.Error(w, "Metric name cannot be empty", http.StatusNotFound)
 			return
 		}
 
-		// Обработка запроса gauge or counter
 		switch metricType {
 		case "gauge":
 			value, err := strconv.ParseFloat(metricValueStr, 64)
-			if err != nil {
+			if err != nil || value < 0 {
 				http.Error(w, "Invalid gauge value", http.StatusBadRequest)
 				return
 			}
-			if value < 0 {
-				http.Error(w, "Gauge value cannot be negative", http.StatusBadRequest)
-				return
-			}
-			ms.UpGauge(metricName, value)
-
+			repo.UpGauge(metricName, value)
 		case "counter":
 			value, err := strconv.ParseInt(metricValueStr, 10, 64)
-			if err != nil {
+			if err != nil || value < 0 {
 				http.Error(w, "Invalid counter value", http.StatusBadRequest)
 				return
 			}
-			if value < 0 {
-				http.Error(w, "Counter value cannot be negative", http.StatusBadRequest)
-				return
-			}
-			ms.UpCounter(metricName, value)
-
+			repo.UpCounter(metricName, value)
 		default:
 			http.Error(w, "Invalid metric type", http.StatusBadRequest)
 			return
 		}
-		log.Printf("Current storage state: Gauge: %+v, Counter: %+v", ms.Gauge, ms.Counter)
+
+		// Логирование состояния (если хранилище имеет доступные поля)
+		if ms, ok := repo.(*storage.MemStorage); ok {
+			log.Printf("State: Gauge: %+v, Counter: %+v", ms.Gauge, ms.Counter)
+		}
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		fmt.Fprint(w, "OK")
 	}
 }

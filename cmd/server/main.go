@@ -1,4 +1,3 @@
-// cmd/server/main.go
 package main
 
 import (
@@ -7,21 +6,18 @@ import (
 
 	"github.com/VerySimle/mellinc/internal/handlers"
 	"github.com/VerySimle/mellinc/internal/storage"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	// Создаем новое хранилище метрик
 	ms := storage.NewMemStorage()
+	mux := chi.NewRouter()
 
-	// Создаем новый маршрутизатор (ServeMux)
-	mux := http.NewServeMux()
+	// Регистрация маршрутов
+	mux.Get("/", handlers.AllHandler(ms))
+	mux.Post("/update/{type}/{name}/{value}", handlers.UpdateHandler(ms))
+	mux.Get("/value/{type}/{name}", handlers.ValueHandler(ms))
 
-	// Регистрируем обработчик для пути /update/
-	mux.HandleFunc("/update/", handlers.UpdateHandler(ms))
-
-	// Запускаем HTTP-сервер на порту 8080
 	log.Println("Server started on :8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatalf("Server failed: %v", err)
-	}
+	http.ListenAndServe(":8080", mux)
 }

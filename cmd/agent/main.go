@@ -13,8 +13,9 @@ func main() {
 	repo := storage.NewMemStorage()
 
 	// Создаём агента, передавая репозиторий и нужные интервалы
-	a := agent.NewAgent(repo, "http://localhost:8080", 2*time.Second, 10*time.Second)
+	a := agent.NewAgent(repo, "http://localhost:8080", 2*time.Second, 4*time.Second)
 
 	log.Println("Agent started")
 	a.Run()
+
 }
