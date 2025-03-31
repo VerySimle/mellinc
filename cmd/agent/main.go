@@ -19,9 +19,9 @@ func main() {
 		ri int
 	}
 
-	flag.StringVar(&options.hp, "host", "localhost:8080", "Адрес и порт хоста")
-	flag.IntVar(&options.pi, "pi", 2, "pollInterval")
-	flag.IntVar(&options.ri, "ri", 4, "reportInterval")
+	flag.StringVar(&options.hp, "a", "localhost:8080", "Адрес и порт хоста")
+	flag.IntVar(&options.pi, "p", 2, "pollInterval")
+	flag.IntVar(&options.ri, "r", 4, "reportInterval")
 	flag.Parse()
 	addr := fmt.Sprintf("http://%s", options.hp)
 	// Создаём агента, передавая репозиторий и нужные интервалы
