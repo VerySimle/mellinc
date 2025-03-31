@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -23,7 +22,7 @@ func main() {
 	//Флаг для изменения порта сервера
 	endpoint := flag.String("a", "localhost:8080", "input Port")
 	flag.Parse()
-	addr := fmt.Sprintf("%s", *endpoint)
+	addr := *endpoint
 
 	//Вывод в терминал :endpoint
 	log.Printf("Server started on %s", addr)
