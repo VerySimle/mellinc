@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -18,6 +20,15 @@ func main() {
 	mux.Post("/update/{type}/{name}/{value}", handlers.UpdateHandler(ms))
 	mux.Get("/value/{type}/{name}", handlers.ValueHandler(ms))
 
-	log.Println("Server started on :8080")
-	http.ListenAndServe(":8080", mux)
+	//Флаг для изменения порта сервера
+	endpoint := flag.Int("port", 8080, "input Port")
+	flag.Parse()
+	addr := fmt.Sprintf(":%d", *endpoint)
+
+	//Вывод в терминал :endpoint
+	log.Printf("Server started on %s", addr)
+	if err := http.ListenAndServe(addr, mux); err != nil {
+		log.Fatal(err)
+	}
+
 }
