@@ -21,9 +21,9 @@ func main() {
 	mux.Get("/value/{type}/{name}", handlers.ValueHandler(ms))
 
 	//Флаг для изменения порта сервера
-	endpoint := flag.Int("a", 8080, "input Port")
+	endpoint := flag.String("a", "localhost:8080", "input Port")
 	flag.Parse()
-	addr := fmt.Sprintf(":%d", *endpoint)
+	addr := fmt.Sprintf("%s", *endpoint)
 
 	//Вывод в терминал :endpoint
 	log.Printf("Server started on %s", addr)
