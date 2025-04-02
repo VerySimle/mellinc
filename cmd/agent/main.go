@@ -14,13 +14,16 @@ func main() {
 	// Создаём репозиторий (хранилище в памяти)
 	repo := storage.NewMemStorage()
 	// Регистрируем и парсим флаги из пакета flagsenv
-	flagsenv.ParseFlagsAgent()
+	confAgent, err := flagsenv.ParseFlagsAgent()
+	if err != nil {
+		log.Fatalf("Ошибка парсинга конфигурации агента: %v", err)
+	}
 
-	addr := fmt.Sprintf("http://%s", flagsenv.ConfAgent.Hp)
+	addr := fmt.Sprintf("http://%s", confAgent.Hp)
 	// Создаём агента, передавая репозиторий и нужные интервалы
-	a := agent.NewAgent(repo, addr, time.Duration(flagsenv.ConfAgent.Pi)*time.Second, time.Duration(flagsenv.ConfAgent.Ri)*time.Second)
+	a := agent.NewAgent(repo, addr, time.Duration(confAgent.Pi)*time.Second, time.Duration(confAgent.Ri)*time.Second)
 
-	log.Println("Agent started")
+	log.Printf("Agent started host - %s, POLL_INTERVAL - %ds, REPORT_INTERVAL - %ds", addr, confAgent.Pi, confAgent.Ri)
 	a.Run()
 
 }

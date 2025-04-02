@@ -10,39 +10,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// RootHandler выводит все метрики в виде HTML-страницы
-func AllHandler(repo storage.Repository) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		metrics := repo.GetAllMetrics()
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(w, "<html><head><title>Metrics</title></head><body><h1>Все метрики</h1><ul>")
-		for name, value := range metrics {
-			fmt.Fprintf(w, "<li>%s: %s</li>", name, value)
-		}
-		fmt.Fprint(w, "</ul></body></html>")
-	}
-}
-
-// ValueHandler возвращает значение метрики по типу и имени
-func ValueHandler(repo storage.Repository) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		metricType, metricName := chi.URLParam(r, "type"), chi.URLParam(r, "name")
-		if metricName == "" {
-			http.Error(w, "Metric name cannot be empty", http.StatusNotFound)
-			return
-		}
-		metrics := repo.GetAllMetrics()
-		if value, ok := metrics[metricName]; ok && (metricType == "gauge" || metricType == "counter") {
-			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-			fmt.Fprint(w, value)
-		} else {
-			http.Error(w, fmt.Sprintf("%s metric not found", metricType), http.StatusNotFound)
-		}
-	}
-}
-
 // UpdateHandler обновляет метрику
-func UpdateHandler(repo storage.Repository) http.HandlerFunc {
+func UpdateHandler(repo MetricsRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricType := chi.URLParam(r, "type")
 		metricName := chi.URLParam(r, "name")

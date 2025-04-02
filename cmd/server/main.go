@@ -19,19 +19,14 @@ func main() {
 	mux.Post("/update/{type}/{name}/{value}", handlers.UpdateHandler(ms))
 	mux.Get("/value/{type}/{name}", handlers.ValueHandler(ms))
 
-	//Флаг для изменения порта сервера
-	/*
-		endpoint := flag.String("a", "localhost:8080", "input Port")
-		flag.Parse()
-	*/
-
-	flagsenv.ParserFlagsServer()
-
-	//addr := *endpoint
+	confServer, err := flagsenv.ParserFlagsServer()
+	if err != nil {
+		log.Fatalf("Ошибка парсинга конфигурации сервера: %v", err)
+	}
 
 	//Вывод в терминал
-	log.Printf("Server started on %s", flagsenv.ConfServer.Endpoint)
-	if err := http.ListenAndServe(flagsenv.ConfServer.Endpoint, mux); err != nil {
+	log.Printf("Server started on %s", confServer.Endpoint)
+	if err := http.ListenAndServe(confServer.Endpoint, mux); err != nil {
 		log.Fatal(err)
 	}
 

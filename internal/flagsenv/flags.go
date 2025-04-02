@@ -1,49 +1,40 @@
 package flagsenv
 
 import (
-	"flag"
-	"os"
-	"strconv"
+	"fmt"
+
+	"github.com/caarlos0/env/v11"
 )
 
 type OptionsAgent struct {
-	Hp string
-	Pi int
-	Ri int
+	Hp string `env:"ADDRESS" envDefault:"localhost:8080"`
+	Pi int    `env:"POLL_INTERVAL" envDefault:"2"`
+	Ri int    `env:"REPORT_INTERVAL" envDefault:"10"`
 }
 
 type OptionsServer struct {
-	Endpoint string
+	Endpoint string `env:"ADDRESS" envDefault:"localhost:8080"`
 }
 
 var ConfAgent OptionsAgent
 var ConfServer OptionsServer
 
-func ParseFlagsAgent() {
-	flag.StringVar(&ConfAgent.Hp, "a", "localhost:8080", "Адрес и порт хоста")
-	flag.IntVar(&ConfAgent.Pi, "p", 2, "Интервал опроса")
-	flag.IntVar(&ConfAgent.Ri, "r", 4, "Интервал отчётов")
-	flag.Parse()
-	if env := os.Getenv("ADDRESS"); env != "" {
-		ConfAgent.Hp = env
+func ParseFlagsAgent() (OptionsAgent, error) {
+	var confAgent OptionsAgent
+	if err := env.Parse(&confAgent); err != nil {
+		fmt.Printf("Ошибка парсинга: %+v\n", err)
+		return OptionsAgent{}, err
 	}
-	if env := os.Getenv("REPORT_INTERVAL"); env != "" {
-		if value, err := strconv.Atoi(env); err == nil {
-			ConfAgent.Ri = value
-		}
-	}
-	if env := os.Getenv("POLL_INTERVAL"); env != "" {
-		if value, err := strconv.Atoi(env); err == nil {
-			ConfAgent.Pi = value
-		}
-	}
-
+	fmt.Printf("Конфигурация агента: %+v\n", confAgent)
+	return confAgent, nil
 }
 
-func ParserFlagsServer() {
-	flag.StringVar(&ConfServer.Endpoint, "a", "localhost:8080", "input Port")
-	flag.Parse()
-	if env := os.Getenv("ADDRESS"); env != "" {
-		ConfServer.Endpoint = env
+func ParserFlagsServer() (OptionsServer, error) {
+	var confServer OptionsServer
+	if err := env.Parse(&confServer); err != nil {
+		fmt.Printf("Ошибка парсинга: %+v\n", err)
+		return OptionsServer{}, err
 	}
+	fmt.Printf("Конфигурация сервера: %+v\n", confServer)
+	return confServer, nil
 }

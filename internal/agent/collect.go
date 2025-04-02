@@ -7,13 +7,17 @@ import (
 	"net/http"
 	"runtime"
 	"time"
-
-	"github.com/VerySimle/mellinc/internal/storage"
 )
+
+type MetricsRepository interface {
+	GetAllMetrics() map[string]string
+	UpGauge(name string, value float64)
+	UpCounter(name string, value int64)
+}
 
 // Agent собирает метрики и отправляет их на сервер.
 type Agent struct {
-	repo           storage.Repository // <-- Интерфейс репозитория
+	repo           MetricsRepository // <-- Интерфейс репозитория
 	ServerURL      string
 	PollInterval   time.Duration
 	ReportInterval time.Duration
@@ -22,7 +26,7 @@ type Agent struct {
 }
 
 // NewAgent – конструктор агента, куда мы «внедряем» (inject) репозиторий.
-func NewAgent(repo storage.Repository, serverURL string, pollInterval, reportInterval time.Duration) *Agent {
+func NewAgent(repo MetricsRepository, serverURL string, pollInterval, reportInterval time.Duration) *Agent {
 	return &Agent{
 		repo:           repo,
 		ServerURL:      serverURL,
