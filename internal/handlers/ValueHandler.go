@@ -21,7 +21,8 @@ func ValueHandler(repo MetricsRepository) http.HandlerFunc {
 			return
 		}
 		metrics := repo.GetAllMetrics()
-		if value, ok := metrics[metricName]; ok && (metricType == "gauge" || metricType == "counter") {
+		key := fmt.Sprintf("%s_%s", metricType, metricName)
+		if value, ok := metrics[key]; ok && (metricType == "gauge" || metricType == "counter") {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 			fmt.Fprint(w, value)
 		} else {
