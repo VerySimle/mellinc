@@ -41,14 +41,14 @@ func (ms *MemStorage) GetAllMetrics() map[string]string {
 	ms.gaugeMu.RLock()
 	// Copy gauge
 	for k, v := range ms.Gauge {
-		out["gauge_"+k] = fmt.Sprintf("%g", v)
+		out[k] = fmt.Sprintf("%g", v)
 	}
 	ms.gaugeMu.RUnlock()
 
 	ms.counterMu.RLock()
 	// Copy counter
 	for k, v := range ms.Counter {
-		out["counter_"+k] = fmt.Sprintf("%d", v)
+		out[k] = fmt.Sprintf("%d", v)
 	}
 	ms.counterMu.RUnlock()
 	return out
