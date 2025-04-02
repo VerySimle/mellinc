@@ -21,29 +21,29 @@ var ConfAgent OptionsAgent
 var ConfServer OptionsServer
 
 func ParseFlagsAgent() (OptionsAgent, error) {
-	flag.StringVar(&ConfAgent.Hp, "a", "localhost:8080", "Адрес и порт хоста")
-	flag.IntVar(&ConfAgent.Pi, "p", 2, "Интервал опроса")
-	flag.IntVar(&ConfAgent.Ri, "r", 4, "Интервал отчётов")
-	flag.Parse()
-
 	var confAgent OptionsAgent
 	if err := env.Parse(&confAgent); err != nil {
 		fmt.Printf("Ошибка парсинга: %+v\n", err)
 		return OptionsAgent{}, err
 	}
+	flag.StringVar(&confAgent.Hp, "a", confAgent.Hp, "Адрес и порт хоста")
+	flag.IntVar(&confAgent.Pi, "p", confAgent.Pi, "Интервал опроса")
+	flag.IntVar(&confAgent.Ri, "r", confAgent.Ri, "Интервал отчётов")
+	flag.Parse()
+
 	fmt.Printf("Конфигурация агента: %+v\n", confAgent)
 	return confAgent, nil
 }
 
 func ParserFlagsServer() (OptionsServer, error) {
-	flag.StringVar(&ConfServer.Endpoint, "a", "localhost:8080", "input Port")
-	flag.Parse()
-
 	var confServer OptionsServer
 	if err := env.Parse(&confServer); err != nil {
 		fmt.Printf("Ошибка парсинга: %+v\n", err)
 		return OptionsServer{}, err
 	}
+	flag.StringVar(&confServer.Endpoint, "a", confServer.Endpoint, "input Port")
+	flag.Parse()
+
 	fmt.Printf("Конфигурация сервера: %+v\n", confServer)
 	return confServer, nil
 }
