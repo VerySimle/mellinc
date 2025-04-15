@@ -6,11 +6,14 @@ import (
 
 	"github.com/VerySimle/mellinc/internal/flagsenv"
 	"github.com/VerySimle/mellinc/internal/handlers"
+	"github.com/VerySimle/mellinc/internal/logger"
+	"github.com/VerySimle/mellinc/internal/middleware"
 	"github.com/VerySimle/mellinc/internal/storage"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
+	defer logger.Shutdown()
 	ms := storage.NewMemStorage()
 	mux := chi.NewRouter()
 
@@ -19,6 +22,8 @@ func main() {
 	mux.Post("/update/{type}/{name}/{value}", handlers.UpdateHandler(ms))
 	mux.Get("/value/{type}/{name}", handlers.ValueHandler(ms))
 
+	loggedMux := middleware.LogMiddlew(logger.Logger, mux)
+
 	confServer, err := flagsenv.ParserFlagsServer()
 	if err != nil {
 		log.Fatalf("Ошибка парсинга конфигурации сервера: %v", err)
@@ -26,7 +31,8 @@ func main() {
 
 	//Вывод в терминал
 	log.Printf("Server started on %s", confServer.Endpoint)
-	if err := http.ListenAndServe(confServer.Endpoint, mux); err != nil {
+
+	if err := http.ListenAndServe(confServer.Endpoint, loggedMux); err != nil {
 		log.Fatal(err)
 	}
 

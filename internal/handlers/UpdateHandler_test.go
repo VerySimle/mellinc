@@ -10,15 +10,17 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// TestUpdateHandler_Gauge проверяет обработку запроса для обновления gauge метрики.
+// Тестирует корректные случаи и ошибки.
 func TestUpdateHandler_Gauge(t *testing.T) {
 	tests := []struct {
-		name           string
-		url            string
-		contentType    string
-		metricName     string
-		metricValue    string
-		expectedValue  float64
-		expectedStatus int
+		name           string  // Описание теста
+		url            string  // URL запроса
+		contentType    string  // Значение заголовка Content-Type
+		metricName     string  // Имя метрики
+		metricValue    string  // Значение метрики в виде строки
+		expectedValue  float64 // Ожидаемое значение метрики в хранилище
+		expectedStatus int     // Ожидаемый HTTP статус ответа
 	}{
 		{
 			name:           "OK gauge metric",
@@ -78,34 +80,47 @@ func TestUpdateHandler_Gauge(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Создаем новое хранилище метрик для независимости теста
 			ms := storage.NewMemStorage()
+
+			// Получаем обработчик обновления метрик, передавая хранилище
 			handler := UpdateHandler(ms)
 
+			// Инициализируем новый роутер chi и регистрируем маршрут обновления метрик
 			r := chi.NewRouter()
+
+			// Формируем новый HTTP запрос с указанным URL и методом POST
 			r.Post("/update/{type}/{name}/{value}", handler)
 			req := httptest.NewRequest(http.MethodPost, tt.url, nil)
 			req.Header.Set("Content-Type", tt.contentType)
+
+			// Создаем ResponseRecorder для записи ответа
 			w := httptest.NewRecorder()
 
+			// Отправляем запрос через роутер
 			r.ServeHTTP(w, req)
 
+			// Получаем результат ответа
 			resp := w.Result()
 			defer resp.Body.Close()
 
+			// Проверяем HTTP статус ответа
 			if resp.StatusCode != tt.expectedStatus {
 				t.Errorf("Expected status %d, got %d for URL %s", tt.expectedStatus, resp.StatusCode, tt.url)
 			}
-
+			// Если статус OK, проверяем, что значение метрики обновилось корректно в хранилище
 			if tt.expectedStatus == http.StatusOK {
 				metrics := ms.GetAllMetrics()
 				valStr, ok := metrics[tt.metricName]
 				if !ok {
 					t.Errorf("Metric %s not found in storage", tt.metricName)
 				}
+				// Преобразуем строковое значение метрики в число
 				val, err := strconv.ParseFloat(valStr, 64)
 				if err != nil {
 					t.Errorf("Error parsing value for %s: %v", tt.metricName, err)
 				}
+				// Сравниваем полученное значение с ожидаемым
 				if val != tt.expectedValue {
 					t.Errorf("Expected value %f for %s, got %f", tt.expectedValue, tt.metricName, val)
 				}
