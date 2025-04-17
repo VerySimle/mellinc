@@ -3,6 +3,7 @@ package flagsenv
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/caarlos0/env/v11"
 )
@@ -17,33 +18,33 @@ type OptionsServer struct {
 	Endpoint string `env:"ADDRESS" envDefault:"localhost:8080"`
 }
 
-var ConfAgent OptionsAgent
-var ConfServer OptionsServer
-
 func ParseFlagsAgent() (OptionsAgent, error) {
-	var confAgent OptionsAgent
-	if err := env.Parse(&confAgent); err != nil {
+	var cfg OptionsAgent
+	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("Ошибка парсинга: %+v\n", err)
 		return OptionsAgent{}, err
 	}
-	flag.StringVar(&confAgent.Hp, "a", confAgent.Hp, "Адрес и порт хоста")
-	flag.IntVar(&confAgent.Pi, "p", confAgent.Pi, "Интервал опроса")
-	flag.IntVar(&confAgent.Ri, "r", confAgent.Ri, "Интервал отчётов")
-	flag.Parse()
-
-	fmt.Printf("Конфигурация агента: %+v\n", confAgent)
-	return confAgent, nil
+	fs := flag.NewFlagSet("agent", flag.ContinueOnError)
+	fs.StringVar(&cfg.Hp, "a", cfg.Hp, "Адрес и порт хоста")
+	fs.IntVar(&cfg.Pi, "p", cfg.Pi, "Интервал опроса")
+	fs.IntVar(&cfg.Ri, "r", cfg.Ri, "Интервал отчётов")
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return OptionsAgent{}, err
+	}
+	return cfg, nil
 }
 
 func ParserFlagsServer() (OptionsServer, error) {
-	var confServer OptionsServer
-	if err := env.Parse(&confServer); err != nil {
+	var cfg OptionsServer
+	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("Ошибка парсинга: %+v\n", err)
 		return OptionsServer{}, err
 	}
-	flag.StringVar(&confServer.Endpoint, "a", confServer.Endpoint, "input Port")
-	flag.Parse()
+	fs := flag.NewFlagSet("server", flag.ContinueOnError)
+	fs.StringVar(&cfg.Endpoint, "a", cfg.Endpoint, "input Port")
 
-	fmt.Printf("Конфигурация сервера: %+v\n", confServer)
-	return confServer, nil
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return OptionsServer{}, err
+	}
+	return cfg, nil
 }

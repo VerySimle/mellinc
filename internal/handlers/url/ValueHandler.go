@@ -1,4 +1,4 @@
-package handlers
+package url
 
 import (
 	"fmt"
