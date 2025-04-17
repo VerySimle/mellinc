@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/VerySimle/mellinc/internal/flagsenv"
-	"github.com/VerySimle/mellinc/internal/handlers"
+	jsonHandlers "github.com/VerySimle/mellinc/internal/handlers/json"
+	urlHandlers "github.com/VerySimle/mellinc/internal/handlers/url"
 	"github.com/VerySimle/mellinc/internal/logger"
 	"github.com/VerySimle/mellinc/internal/middleware"
 	"github.com/VerySimle/mellinc/internal/storage"
@@ -18,12 +19,12 @@ func main() {
 	mux := chi.NewRouter()
 
 	// Регистрация маршрутов
-	mux.Get("/", handlers.AllHandler(ms))
-	mux.Post("/update/{type}/{name}/{value}", handlers.UpdateHandler(ms))
-	mux.Get("/value/{type}/{name}", handlers.ValueHandler(ms))
+	mux.Get("/", urlHandlers.AllHandler(ms))
+	mux.Post("/update/{type}/{name}/{value}", urlHandlers.UpdateHandler(ms))
+	mux.Get("/value/{type}/{name}", urlHandlers.ValueHandler(ms))
 
-	mux.Post("/update/", handlers.UpdateJSONHandler(ms))
-	mux.Post("/value/", handlers.ValueJSONHandler(ms))
+	mux.Post("/update/", jsonHandlers.UpdateJSONHandler(ms))
+	mux.Post("/value/", jsonHandlers.ValueJSONHandler(ms))
 
 	loggedMux := middleware.LogMiddlew(logger.Logger, mux)
 

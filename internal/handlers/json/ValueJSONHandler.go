@@ -1,4 +1,4 @@
-package handlers
+package json
 
 import (
 	"encoding/json"
@@ -10,9 +10,9 @@ import (
 // JSON‑структура для обмена метриками
 type JSONMetric struct {
 	ID    string   `json:"id"`
-	MType string   `json:"type"`            // "gauge" или "counter"
-	Delta *int64   `json:"delta,omitempty"` // для counter
-	Value *float64 `json:"value,omitempty"` // для gauge
+	MType string   `json:"type"`
+	Delta *int64   `json:"delta,omitempty"`
+	Value *float64 `json:"value,omitempty"`
 }
 
 func ValueJSONHandler(repo MetricsRepository) http.HandlerFunc {

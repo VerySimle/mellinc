@@ -1,4 +1,4 @@
-package handlers
+package json
 
 import (
 	"encoding/json"
@@ -7,11 +7,10 @@ import (
 )
 
 // JSON‑структура для обмена метриками
-type UPDATEJSONMetric struct {
-	ID    string   `json:"id"`
-	MType string   `json:"type"`            // "gauge" или "counter"
-	Delta *int64   `json:"delta,omitempty"` // для counter
-	Value *float64 `json:"value,omitempty"` // для gauge
+type MetricsRepository interface {
+	GetAllMetrics() map[string]string
+	UpGauge(name string, value float64)
+	UpCounter(name string, value int64)
 }
 
 // UpdateJSONHandler — POST /update/
