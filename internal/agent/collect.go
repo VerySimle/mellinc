@@ -1,11 +1,14 @@
 package agent
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -13,6 +16,13 @@ type MetricsRepository interface {
 	GetAllMetrics() map[string]string
 	UpGauge(name string, value float64)
 	UpCounter(name string, value int64)
+}
+
+type JSONMetric struct {
+	ID    string   `json:"id"`
+	MType string   `json:"type"`
+	Delta *int64   `json:"delta,omitempty"`
+	Value *float64 `json:"value,omitempty"`
 }
 
 // Agent собирает метрики и отправляет их на сервер.
@@ -79,21 +89,24 @@ func (a *Agent) updateAdditionalMetrics() {
 	a.repo.UpGauge("RandomValue", rand.Float64()) // обновляемое произвольное значение
 }
 
-// sendMetric – отправляет одну метрику по HTTP POST.
-func (a *Agent) sendMetric(metricType, metricName, value string) error {
-	url := fmt.Sprintf("%s/update/%s/%s/%s", a.ServerURL, metricType, metricName, value)
-	req, err := http.NewRequest(http.MethodPost, url, nil)
+// sendMetricJSON – отправляет одну метрику по HTTP POST.
+func (a *Agent) sendMetricJSON(m JSONMetric) error {
+	data, err := json.Marshal(m)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "text/plain")
+	url := fmt.Sprintf("%s/update/", a.ServerURL)
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := a.Client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("server responded with status: %d", resp.StatusCode)
 	}
@@ -103,14 +116,17 @@ func (a *Agent) sendMetric(metricType, metricName, value string) error {
 // reportMetrics – берёт все метрики из репозитория и отправляет их на сервер.
 func (a *Agent) reportMetrics() {
 	metrics := a.repo.GetAllMetrics()
-	for key, value := range metrics {
-		metricType := "gauge"
-		if key == "PollCount" {
-			metricType = "counter"
+	for name, raw := range metrics {
+		var m JSONMetric
+		if name == "PollCount" {
+			cnt, _ := strconv.ParseInt(raw, 10, 64)
+			m = JSONMetric{ID: name, MType: "counter", Delta: &cnt}
+		} else {
+			v, _ := strconv.ParseFloat(raw, 64)
+			m = JSONMetric{ID: name, MType: "gauge", Value: &v}
 		}
-		err := a.sendMetric(metricType, key, value)
-		if err != nil {
-			log.Printf("Error sending metric %s: %v", key, err)
+		if err := a.sendMetricJSON(m); err != nil {
+			log.Printf("Error sending metric %s: %v", name, err)
 		}
 	}
 }

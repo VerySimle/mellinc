@@ -22,6 +22,9 @@ func main() {
 	mux.Post("/update/{type}/{name}/{value}", handlers.UpdateHandler(ms))
 	mux.Get("/value/{type}/{name}", handlers.ValueHandler(ms))
 
+	mux.Post("/update/", handlers.UpdateJSONHandler(ms))
+	mux.Post("/value/", handlers.ValueJSONHandler(ms))
+
 	loggedMux := middleware.LogMiddlew(logger.Logger, mux)
 
 	confServer, err := flagsenv.ParserFlagsServer()
